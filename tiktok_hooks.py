@@ -30,7 +30,7 @@ class OpenRouterClient:
     
     def generate_text(self, prompt: str, model: str = "openrouter/auto", 
                      temperature: float = 0.8, max_tokens: int = 500) -> str:
-        """Generate text using OpenRouter API"""
+        """Generate text using OpenRouter API with retry logic"""
         payload = {
             "model": model,
             "messages": [
@@ -40,22 +40,38 @@ class OpenRouterClient:
             "max_tokens": max_tokens
         }
         
-        try:
-            response = requests.post(
-                f"{self.base_url}/chat/completions",
-                headers=self.headers,
-                json=payload,
-                timeout=30
-            )
-            response.raise_for_status()
-            
-            result = response.json()
-            return result["choices"][0]["message"]["content"]
-            
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"OpenRouter API error: {str(e)}")
-        except KeyError as e:
-            raise Exception(f"Unexpected API response format: {str(e)}")
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    f"{self.base_url}/chat/completions",
+                    headers=self.headers,
+                    json=payload,
+                    timeout=45  # Increased timeout
+                )
+                response.raise_for_status()
+                
+                result = response.json()
+                return result["choices"][0]["message"]["content"]
+                
+            except requests.exceptions.Timeout:
+                if attempt < max_retries - 1:
+                    wait_time = (2 ** attempt) + random.uniform(0, 1)
+                    print(f"⏳ Request timeout, retrying in {wait_time:.1f}s... (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    raise Exception("Request timed out after multiple attempts")
+            except requests.exceptions.RequestException as e:
+                if attempt < max_retries - 1:
+                    wait_time = (2 ** attempt) + random.uniform(0, 1)
+                    print(f"⏳ API error, retrying in {wait_time:.1f}s... (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    raise Exception(f"OpenRouter API error: {str(e)}")
+            except KeyError as e:
+                raise Exception(f"Unexpected API response format: {str(e)}")
 
 class TikTokHookGenerator:
     def __init__(self):
