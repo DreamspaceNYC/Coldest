@@ -355,6 +355,9 @@ function App() {
         {/* Footer */}
         <div className="text-center mt-12 text-gray-500">
           <p>Powered by OpenRouter AI • Built for Content Creators</p>
+          <p className="text-sm mt-2">
+            {isOffline ? '📱 Offline Mode Active' : '🌐 Online Mode Active'} • Works on iPhone as PWA
+          </p>
         </div>
       </div>
     </div>
