@@ -109,23 +109,21 @@ Generate exactly {count} hooks:
     def generate_hooks_from_transcript(self, transcript: str, count: int = 5) -> List[str]:
         """Generate viral TikTok hooks from a transcript"""
         prompt = f"""
-Create {count} viral TikTok hook lines that would make people want to watch content based on this transcript:
+Based on this transcript, create {count} viral TikTok hook lines:
 
-Transcript: "{transcript}"
+"{transcript}"
 
 Create hooks that:
 - Extract the most surprising/valuable insights
 - Create curiosity gaps without spoiling the content
 - Are under 15 words each
 - Would stop someone from scrolling
-- Use psychological triggers (numbers, secrets, mistakes, etc.)
 
-Format as a numbered list:
+Format as:
 1. [Hook 1]
 2. [Hook 2]
+3. [Hook 3]
 etc.
-
-Generate exactly {count} hooks:
 """
         
         response = self.client.generate_text(
@@ -134,7 +132,6 @@ Generate exactly {count} hooks:
             max_tokens=400
         )
         
-        print(f"DEBUG - API Response: {response}")  # Debug line
         hooks = self._parse_hooks(response, count)
         return hooks
     
