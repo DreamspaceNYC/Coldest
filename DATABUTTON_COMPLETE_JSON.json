@@ -1,0 +1,304 @@
+{
+  "project": {
+    "name": "TikTok Hook Generator",
+    "description": "AI-powered viral TikTok hook line generator for content creators",
+    "type": "full-stack-web-app",
+    "tech_stack": {
+      "frontend": "React 18 + Tailwind CSS",
+      "backend": "FastAPI + Python",
+      "ai_integration": "OpenRouter API",
+      "deployment_type": "PWA (Progressive Web App)"
+    }
+  },
+  "environment_variables": {
+    "OPENROUTER_API_KEY": "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"
+  },
+  "backend": {
+    "framework": "FastAPI",
+    "python_version": "3.9+",
+    "dependencies": [
+      "fastapi",
+      "requests",
+      "python-dotenv",
+      "uvicorn",
+      "pydantic"
+    ],
+    "api_endpoints": [
+      {
+        "method": "GET",
+        "path": "/",
+        "description": "Health check endpoint"
+      },
+      {
+        "method": "POST", 
+        "path": "/api/generate-hooks",
+        "description": "Generate viral TikTok hooks",
+        "request_body": {
+          "topic": "string (optional)",
+          "transcript": "string (optional)",
+          "count": "integer (3-10, default: 5)"
+        },
+        "response": {
+          "hooks": ["array of hook strings"],
+          "source_type": "topic|transcript",
+          "source_content": "brief description of source"
+        }
+      }
+    ],
+    "ai_integration": {
+      "provider": "OpenRouter",
+      "api_url": "https://openrouter.ai/api/v1/chat/completions",
+      "model": "openrouter/auto",
+      "temperature": 0.8,
+      "max_tokens": 500,
+      "retry_logic": {
+        "max_retries": 3,
+        "exponential_backoff": true,
+        "timeout": 45
+      }
+    },
+    "cors_config": {
+      "allow_origins": ["*"],
+      "allow_credentials": true,
+      "allow_methods": ["*"],
+      "allow_headers": ["*"]
+    }
+  },
+  "frontend": {
+    "framework": "React",
+    "build_tool": "Create React App",
+    "styling": "Tailwind CSS",
+    "dependencies": [
+      "react",
+      "react-dom",
+      "tailwindcss",
+      "postcss",
+      "autoprefixer"
+    ],
+    "components": {
+      "App": {
+        "description": "Main application component",
+        "features": [
+          "Tab navigation (Topic vs Transcript)",
+          "Input forms with validation",
+          "Hook count selector (3, 5, 7, 10)",
+          "Generate button with loading states",
+          "Results display with copy functionality",
+          "PWA installation prompt",
+          "Offline status indicators"
+        ],
+        "state_management": [
+          "activeTab (topic|transcript)",
+          "topic (string)",
+          "transcript (string)", 
+          "count (number)",
+          "hooks (array)",
+          "loading (boolean)",
+          "error (string)",
+          "isOffline (boolean)",
+          "deferredPrompt (PWA install)"
+        ]
+      }
+    },
+    "ui_design": {
+      "color_scheme": {
+        "primary": "Purple to Pink gradient (#8b5cf6 to #ec4899)",
+        "background": "Light purple gradient (purple-50 to pink-50)",
+        "text": "Gray scale (gray-600 to gray-800)",
+        "accents": "White with subtle shadows"
+      },
+      "layout": {
+        "header": "Centered title with description and install button",
+        "main": "Max-width container with card-based design",
+        "tabs": "Toggle between Topic and Transcript input",
+        "form": "Clean input fields with labels",
+        "results": "Numbered list with copy buttons",
+        "footer": "Status indicators and branding"
+      },
+      "responsive": {
+        "mobile": "Mobile-first design, optimized for iPhone",
+        "tablet": "Adjusted spacing and typography",
+        "desktop": "Max-width container with proper spacing"
+      }
+    }
+  },
+  "pwa_configuration": {
+    "manifest": {
+      "name": "TikTok Hook Generator",
+      "short_name": "TikTokHooks",
+      "description": "Generate viral TikTok hooks using AI",
+      "start_url": "/",
+      "display": "standalone",
+      "background_color": "#ffffff",
+      "theme_color": "#8b5cf6",
+      "orientation": "portrait",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        },
+        {
+          "src": "/icon-512.png", 
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
+    },
+    "service_worker": {
+      "cache_strategy": "Cache static assets for offline use",
+      "offline_functionality": "Template-based hook generation when offline",
+      "background_sync": "Sync when connection returns",
+      "features": [
+        "Asset caching",
+        "Offline hook templates",
+        "Install prompt handling",
+        "Network status detection"
+      ]
+    }
+  },
+  "functionality": {
+    "hook_generation": {
+      "online_mode": {
+        "description": "Uses OpenRouter AI for high-quality hooks",
+        "prompt_engineering": "Optimized prompts for viral TikTok content with psychological triggers",
+        "processing": "Parses AI response and extracts clean hook lines",
+        "fallback": "Switches to offline mode if API fails"
+      },
+      "offline_mode": {
+        "description": "Uses smart templates when no internet",
+        "templates": [
+          "This {topic} hack will blow your mind",
+          "Nobody talks about this {topic} secret",
+          "You're doing {topic} wrong - here's why",
+          "This changes everything about {topic}",
+          "The {topic} mistake everyone makes"
+        ],
+        "word_substitution": "Intelligent placeholder replacement",
+        "instant_results": "No API delays, immediate generation"
+      }
+    },
+    "user_interactions": {
+      "input_methods": [
+        {
+          "type": "topic",
+          "description": "Single topic input field",
+          "examples": ["fitness tips", "cooking hacks", "productivity"]
+        },
+        {
+          "type": "transcript",
+          "description": "Multi-line textarea for video/podcast content",
+          "processing": "Extracts key themes and generates relevant hooks"
+        }
+      ],
+      "copy_functionality": [
+        "Individual hook copy with one-click",
+        "Copy all hooks as formatted list",
+        "Clipboard integration with success feedback"
+      ],
+      "pwa_features": [
+        "Install prompt detection and handling", 
+        "Add to home screen capability",
+        "Standalone app experience",
+        "Offline usage indicators"
+      ]
+    }
+  },
+  "ai_prompts": {
+    "topic_based": {
+      "template": "Generate {count} viral TikTok hook lines for the topic: \"{topic}\"\n\nRequirements:\n- Each hook should be attention-grabbing and under 15 words\n- Use psychological triggers like curiosity, shock, or FOMO\n- Include numbers, questions, or bold statements when appropriate\n- Make them scroll-stopping and engaging\n- Focus on creating hooks that would make people stop scrolling\n- Use patterns like \"You won't believe...\", \"This changes everything...\", \"Nobody talks about...\"\n- Format as a numbered list (1. 2. 3. etc.)\n\nTopic: {topic}\n\nGenerate exactly {count} hooks:",
+      "parameters": {
+        "temperature": 0.8,
+        "max_tokens": 500
+      }
+    },
+    "transcript_based": {
+      "template": "Generate {count} viral TikTok hook lines based on this content: \"{transcript}\"\n\nRequirements:\n- Each hook should be attention-grabbing and under 15 words\n- Use psychological triggers like curiosity, shock, or FOMO\n- Include numbers, questions, or bold statements when appropriate\n- Make them scroll-stopping and engaging\n- Focus on creating hooks that would make people stop scrolling\n- Format as a numbered list (1. 2. 3. etc.)\n\nGenerate exactly {count} hooks:",
+      "parameters": {
+        "temperature": 0.8,
+        "max_tokens": 400
+      }
+    }
+  },
+  "deployment_requirements": {
+    "infrastructure": {
+      "frontend_hosting": "Static hosting with CDN",
+      "backend_hosting": "Serverless or containerized API",
+      "ssl_certificate": "Required for PWA functionality",
+      "custom_domain": "Preferred (e.g., tiktokHooks.app)"
+    },
+    "performance_targets": {
+      "page_load": "< 3 seconds on mobile",
+      "api_response": "< 5 seconds for hook generation",
+      "offline_response": "< 1 second for template generation",
+      "lighthouse_score": "90+ on mobile"
+    },
+    "scalability": {
+      "concurrent_users": "Support 1000+ simultaneous users",
+      "api_rate_limiting": "Prevent abuse while allowing normal usage",
+      "caching": "Static asset caching and API response caching",
+      "monitoring": "Basic analytics and error tracking"
+    }
+  },
+  "testing_requirements": {
+    "functional_tests": [
+      "Generate hooks from various topics",
+      "Generate hooks from transcript text", 
+      "Test offline functionality",
+      "Test PWA installation on iPhone",
+      "Verify copy-to-clipboard functionality",
+      "Test responsive design across devices"
+    ],
+    "performance_tests": [
+      "Page load speed on 3G connection",
+      "API response times under load",
+      "Offline mode switching speed",
+      "Memory usage during extended use"
+    ],
+    "compatibility_tests": [
+      "iPhone Safari PWA installation",
+      "Android Chrome PWA functionality",
+      "Desktop browser compatibility",
+      "Offline mode across platforms"
+    ]
+  },
+  "file_structure": {
+    "frontend": {
+      "public/": {
+        "index.html": "Main HTML file with PWA meta tags",
+        "manifest.json": "PWA manifest configuration",
+        "sw.js": "Service worker for offline functionality",
+        "icon-192.png": "PWA icon 192x192",
+        "icon-512.png": "PWA icon 512x512"
+      },
+      "src/": {
+        "App.js": "Main React component with all functionality",
+        "App.css": "Custom styles and animations",
+        "index.js": "React entry point",
+        "index.css": "Global styles and Tailwind imports"
+      },
+      "config_files": {
+        "package.json": "Dependencies and scripts",
+        "tailwind.config.js": "Tailwind CSS configuration",
+        "postcss.config.js": "PostCSS configuration"
+      }
+    },
+    "backend": {
+      "server.py": "FastAPI application with all endpoints",
+      "requirements.txt": "Python dependencies",
+      ".env": "Environment variables (API keys)"
+    }
+  },
+  "key_features_summary": [
+    "AI-powered viral TikTok hook generation",
+    "Dual input methods (topic/transcript)",
+    "Progressive Web App with offline capability",
+    "iPhone-optimized mobile experience",
+    "Copy-to-clipboard functionality",
+    "Beautiful purple/pink gradient UI",
+    "Real-time online/offline status",
+    "Smart template fallback system",
+    "Responsive design across all devices",
+    "Professional-grade user experience"
+  ]
+}
