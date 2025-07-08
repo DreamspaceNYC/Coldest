@@ -23,8 +23,69 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [sourceInfo, setSourceInfo] = useState('');
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+
+  // PWA Installation
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallButton, setShowInstallButton] = useState(false);
+
+  useEffect(() => {
+    // Listen for offline/online events
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // PWA install prompt
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallButton(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  // PWA Install Handler
+  const handleInstallPWA = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+        setShowInstallButton(false);
+      }
+    }
+  };
+
+  // Offline hook generation
+  const generateOfflineHooks = (inputTopic, hookCount) => {
+    const templates = [
+      `This ${inputTopic} hack will blow your mind`,
+      `Nobody talks about this ${inputTopic} secret`,
+      `You're doing ${inputTopic} wrong - here's why`,
+      `This changes everything about ${inputTopic}`,
+      `The ${inputTopic} mistake everyone makes`,
+      `${inputTopic} experts don't want you to know this`,
+      `This simple ${inputTopic} trick went viral`,
+      `Why your ${inputTopic} isn't working`,
+      `The ${inputTopic} method that transforms everything`,
+      `This ${inputTopic} discovery will shock you`
+    ];
+
+    // Randomize and return requested count
+    const shuffled = templates.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, hookCount);
+  };
 
   const generateHooks = async () => {
     if (!topic && !transcript) {
