@@ -148,7 +148,13 @@ Generate exactly {count} hooks based on this content:
                 else:
                     hook = line.lstrip('- •0123456789.').strip()
                 
-                if hook and len(hook) > 10:  # Filter out very short responses
+                # Clean up formatting
+                hook = hook.strip('"*')  # Remove quotes and asterisks
+                hook = hook.split('**')[0].strip()  # Remove bold markdown
+                hook = hook.split('[')[0].strip()  # Remove brackets and content
+                hook = hook.split('(')[0].strip()  # Remove parentheses explanations
+                
+                if hook and len(hook) > 10 and len(hook) < 150:  # Filter reasonable length
                     hooks.append(hook)
         
         # If we didn't get enough hooks from parsing, try a different approach
@@ -159,10 +165,17 @@ Generate exactly {count} hooks based on this content:
             
             for sentence in sentences:
                 sentence = sentence.lstrip('- •0123456789').strip()
+                sentence = sentence.strip('"*')
+                sentence = sentence.split('**')[0].strip()
+                sentence = sentence.split('[')[0].strip()
+                sentence = sentence.split('(')[0].strip()
+                
                 if sentence and len(sentence) > 10 and len(sentence) < 150:
-                    hooks.append(sentence)
-                    if len(hooks) >= count:
-                        break
+                    # Avoid duplicates
+                    if sentence not in hooks:
+                        hooks.append(sentence)
+                        if len(hooks) >= count:
+                            break
         
         return hooks[:count]  # Return exactly the requested count
 
