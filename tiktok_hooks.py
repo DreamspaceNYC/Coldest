@@ -140,6 +140,10 @@ etc.
         hooks = []
         lines = response.strip().split('\n')
         
+        # Debug
+        print(f"DEBUG - Response length: {len(response)}")
+        print(f"DEBUG - Lines: {lines}")
+        
         for line in lines:
             line = line.strip()
             if line and (line[0].isdigit() or line.startswith('-') or line.startswith('•')):
@@ -178,6 +182,7 @@ etc.
                         if len(hooks) >= count:
                             break
         
+        print(f"DEBUG - Final hooks: {hooks}")
         return hooks[:count]  # Return exactly the requested count
 
 def main():
