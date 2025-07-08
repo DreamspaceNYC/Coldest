@@ -1,0 +1,231 @@
+#!/usr/bin/env python3
+"""
+TikTok Hook Generator CLI Tool
+Generates viral TikTok hook lines using OpenRouter API
+"""
+
+import os
+import requests
+import argparse
+import sys
+import time
+import random
+from typing import List
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+class OpenRouterClient:
+    def __init__(self):
+        self.api_key = os.getenv("OPENROUTER_API_KEY")
+        if not self.api_key:
+            raise ValueError("OPENROUTER_API_KEY environment variable is required")
+        
+        self.base_url = "https://openrouter.ai/api/v1"
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+    
+    def generate_text(self, prompt: str, model: str = "openrouter/auto", 
+                     temperature: float = 0.8, max_tokens: int = 500) -> str:
+        """Generate text using OpenRouter API"""
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": temperature,
+            "max_tokens": max_tokens
+        }
+        
+        try:
+            response = requests.post(
+                f"{self.base_url}/chat/completions",
+                headers=self.headers,
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            
+            result = response.json()
+            return result["choices"][0]["message"]["content"]
+            
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"OpenRouter API error: {str(e)}")
+        except KeyError as e:
+            raise Exception(f"Unexpected API response format: {str(e)}")
+
+class TikTokHookGenerator:
+    def __init__(self):
+        self.client = OpenRouterClient()
+        
+    def generate_hooks_from_topic(self, topic: str, count: int = 5) -> List[str]:
+        """Generate viral TikTok hooks from a topic"""
+        prompt = f"""
+Generate {count} viral TikTok hook lines for the topic: "{topic}"
+
+Requirements:
+- Each hook should be attention-grabbing and under 15 words
+- Use psychological triggers like curiosity, shock, or FOMO
+- Include numbers, questions, or bold statements when appropriate
+- Make them scroll-stopping and engaging
+- Focus on creating hooks that would make people stop scrolling
+- Use patterns like "You won't believe...", "This changes everything...", "Nobody talks about..."
+- Format as a numbered list (1. 2. 3. etc.)
+
+Topic: {topic}
+
+Generate exactly {count} hooks:
+"""
+        
+        response = self.client.generate_text(
+            prompt=prompt,
+            temperature=0.8,  # Higher creativity for viral content
+            max_tokens=500
+        )
+        
+        # Parse the response to extract individual hooks
+        hooks = self._parse_hooks(response, count)
+        return hooks
+    
+    def generate_hooks_from_transcript(self, transcript: str, count: int = 5) -> List[str]:
+        """Generate viral TikTok hooks from a transcript"""
+        prompt = f"""
+Analyze this transcript and generate {count} viral TikTok hook lines that would make people want to watch the full content:
+
+Transcript: "{transcript}"
+
+Requirements:
+- Extract the most interesting/shocking/valuable points from the transcript
+- Create hooks that tease the content without giving everything away
+- Use psychological triggers like curiosity gaps, controversy, or value promises
+- Keep each hook under 15 words
+- Make them scroll-stopping and click-worthy
+- Focus on the most engaging parts of the transcript
+- Format as a numbered list (1. 2. 3. etc.)
+
+Generate exactly {count} hooks based on this content:
+"""
+        
+        response = self.client.generate_text(
+            prompt=prompt,
+            temperature=0.8,
+            max_tokens=600
+        )
+        
+        hooks = self._parse_hooks(response, count)
+        return hooks
+    
+    def _parse_hooks(self, response: str, count: int) -> List[str]:
+        """Parse the API response to extract clean hook lines"""
+        hooks = []
+        lines = response.strip().split('\n')
+        
+        for line in lines:
+            line = line.strip()
+            if line and (line[0].isdigit() or line.startswith('-') or line.startswith('•')):
+                # Remove numbering/bullets and clean up
+                if '.' in line and line[0].isdigit():
+                    hook = line.split('.', 1)[1].strip()
+                else:
+                    hook = line.lstrip('- •0123456789.').strip()
+                
+                if hook and len(hook) > 10:  # Filter out very short responses
+                    hooks.append(hook)
+        
+        # If we didn't get enough hooks from parsing, try a different approach
+        if len(hooks) < count:
+            # Split by common delimiters and filter
+            all_text = response.replace('\n', ' ').replace('\t', ' ')
+            sentences = [s.strip() for s in all_text.split('.') if s.strip()]
+            
+            for sentence in sentences:
+                sentence = sentence.lstrip('- •0123456789').strip()
+                if sentence and len(sentence) > 10 and len(sentence) < 150:
+                    hooks.append(sentence)
+                    if len(hooks) >= count:
+                        break
+        
+        return hooks[:count]  # Return exactly the requested count
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Generate viral TikTok hooks using OpenRouter API",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python tiktok_hooks.py --topic "productivity tips for students"
+  python tiktok_hooks.py --transcript podcast_transcript.txt --count 7
+  python tiktok_hooks.py -t "cooking hacks" -c 3
+        """
+    )
+    parser.add_argument("--topic", "-t", type=str, help="Topic to generate hooks for")
+    parser.add_argument("--transcript", "-f", type=str, help="Path to transcript file")
+    parser.add_argument("--count", "-c", type=int, default=5, help="Number of hooks to generate (default: 5)")
+    
+    args = parser.parse_args()
+    
+    if not args.topic and not args.transcript:
+        print("❌ Error: Please provide either --topic or --transcript")
+        print("\nUsage examples:")
+        print("  python tiktok_hooks.py --topic 'fitness tips'")
+        print("  python tiktok_hooks.py --transcript transcript.txt")
+        sys.exit(1)
+    
+    if args.topic and args.transcript:
+        print("❌ Error: Please provide either --topic OR --transcript, not both")
+        sys.exit(1)
+    
+    try:
+        generator = TikTokHookGenerator()
+        
+        if args.topic:
+            print(f"🎯 Generating {args.count} viral TikTok hooks for topic: '{args.topic}'")
+            print("🔄 Processing...")
+            hooks = generator.generate_hooks_from_topic(args.topic, args.count)
+        else:
+            # Read transcript from file
+            try:
+                with open(args.transcript, 'r', encoding='utf-8') as f:
+                    transcript_content = f.read()
+                
+                if not transcript_content.strip():
+                    print(f"❌ Error: Transcript file '{args.transcript}' is empty")
+                    sys.exit(1)
+                
+                print(f"📄 Generating {args.count} viral TikTok hooks from transcript: '{args.transcript}'")
+                print("🔄 Processing...")
+                hooks = generator.generate_hooks_from_transcript(transcript_content, args.count)
+            except FileNotFoundError:
+                print(f"❌ Error: Transcript file '{args.transcript}' not found")
+                sys.exit(1)
+            except Exception as e:
+                print(f"❌ Error reading transcript file: {str(e)}")
+                sys.exit(1)
+        
+        # Display results
+        print("\n" + "="*60)
+        print("🚀 VIRAL TIKTOK HOOKS")
+        print("="*60)
+        
+        if hooks:
+            for i, hook in enumerate(hooks, 1):
+                print(f"{i}. {hook}")
+        else:
+            print("❌ No hooks were generated. Please try a different topic or check your transcript.")
+            
+        print("="*60)
+        print(f"✅ Generated {len(hooks)} hooks successfully!")
+            
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
+        print("\nTroubleshooting:")
+        print("- Check your OpenRouter API key in .env file")
+        print("- Ensure you have internet connection")
+        print("- Try a simpler topic or shorter transcript")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
