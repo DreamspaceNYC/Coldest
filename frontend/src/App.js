@@ -97,6 +97,23 @@ function App() {
     setError('');
     setHooks([]);
 
+    // If offline, use local generation
+    if (isOffline || !navigator.onLine) {
+      try {
+        const inputText = activeTab === 'topic' ? topic : transcript;
+        const offlineHooks = generateOfflineHooks(inputText, count);
+        setHooks(offlineHooks);
+        setSourceInfo(`Generated ${offlineHooks.length} hooks offline from ${activeTab}: "${inputText.substring(0, 50)}..."`);
+        setLoading(false);
+        return;
+      } catch (err) {
+        setError('Offline generation failed');
+        setLoading(false);
+        return;
+      }
+    }
+
+    // Online API generation
     try {
       const response = await fetch(`${backendUrl}/api/generate-hooks`, {
         method: 'POST',
@@ -111,15 +128,19 @@ function App() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to generate hooks');
+        throw new Error('API request failed');
       }
 
       const data = await response.json();
       setHooks(data.hooks);
-      setSourceInfo(`Generated ${data.hooks.length} hooks from ${data.source_type}: "${data.source_content}"`);
+      setSourceInfo(`Generated ${data.hooks.length} hooks online from ${data.source_type}: "${data.source_content}"`);
     } catch (err) {
-      setError(err.message);
+      // Fallback to offline generation if API fails
+      console.log('API failed, falling back to offline generation');
+      const inputText = activeTab === 'topic' ? topic : transcript;
+      const offlineHooks = generateOfflineHooks(inputText, count);
+      setHooks(offlineHooks);
+      setSourceInfo(`Generated ${offlineHooks.length} hooks offline (API unavailable) from ${activeTab}: "${inputText.substring(0, 50)}..."`);
     } finally {
       setLoading(false);
     }
